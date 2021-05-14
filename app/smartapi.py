@@ -4,8 +4,7 @@ Class for querying the SmartAPI registry for TRAPI 1.1 endpoints
 There is no caching. All gets trigger a fresh query
 '''
 
-#### FIXME replace this with httpx
-import requests
+import httpx
 
 class SmartAPI:
 
@@ -39,7 +38,7 @@ class SmartAPI:
         Returns a list of all endpoints that match a query for TRAPI
         '''
 
-        response_content = requests.get( self.base_url + '/query?limit=1000&q=TRAPI', headers={'accept': 'application/json'})
+        response_content = httpx.get( self.base_url + '/query?limit=1000&q=TRAPI', headers={'accept': 'application/json'})
 
         if response_content.status_code != 200:
             return
