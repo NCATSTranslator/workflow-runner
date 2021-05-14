@@ -1,10 +1,16 @@
 """Workflow runner."""
+from collections import defaultdict
+import logging
+
 from fastapi import Body
+import httpx
 from reasoner_pydantic import Query as ReasonerQuery, Response
 
-from .util import load_example
+from .util import load_example, drop_nulls
 from .trapi import TRAPI
+from .smartapi import SmartAPI
 
+LOGGER = logging.getLogger(__name__)
 APP = TRAPI(
     title="Workflow runner",
     version="1.0.0",
@@ -18,6 +24,12 @@ APP = TRAPI(
         "x-role": "responsible developer",
     },
 )
+
+endpoints = SmartAPI().get_operations_endpoints()
+SERVICES = defaultdict(list)
+for endpoint in endpoints:
+    for operation in endpoint["operations"]:
+        SERVICES[operation].append(endpoint["url"] + "/query")
 
 
 @APP.post(
@@ -39,9 +51,29 @@ async def run_workflow(
         request: ReasonerQuery = Body(..., example=load_example("query")),
 ) -> Response:
     """Run workflow."""
-    request_dict = request.dict()
+    request_dict = request.dict(
+        by_alias=True,
+        exclude_unset=True,
+    )
     message = request_dict["message"]
     workflow = request_dict["workflow"]
+    async with httpx.AsyncClient() as client:
+        for operation in workflow:
+            url = SERVICES[operation["id"]][0]  # just take the first one
+            LOGGER.debug(f"POSTing operation '{operation}' to {url}...")
+            response = await client.post(
+                url,
+                json={
+                    "message": message,
+                    "workflow": [
+                        operation,
+                    ],
+                },
+                timeout=30.0,
+            )
+            if response.status_code > 200:
+                raise ValueError(str(response.status_code) + ": " + response.text)
+            message = drop_nulls(response.json()["message"])
     return Response(
         message=message,
         workflow=workflow,
