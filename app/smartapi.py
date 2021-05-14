@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
+'''
+Class for querying the SmartAPI registry for TRAPI 1.1 endpoints
+There is no caching. All gets trigger a fresh query
+'''
 
+#### FIXME replace this with httpx
 import requests
-import json
 
 class SmartAPI:
 
@@ -11,19 +15,31 @@ class SmartAPI:
 
 
     def get_operations_endpoints(self):
+        '''
+        Returns a list of all endpoints that support at least one workflow operation
+        '''
 
         endpoints = self.get_trapi_endpoints()
+        if endpoints is None:
+            return
+
         operations_endpoints = []
         for endpoint in endpoints:
             if endpoint['operations'] is not None:
                 operations_endpoints.append(endpoint)
 
+        if len(operations_endpoints) == 0:
+            return None
+
         return operations_endpoints
 
 
     def get_trapi_endpoints(self):
-    
-        response_content = requests.get( self.base_url + '/query?limit=100&q=TRAPI', headers={'accept': 'application/json'})
+        '''
+        Returns a list of all endpoints that match a query for TRAPI
+        '''
+
+        response_content = requests.get( self.base_url + '/query?limit=1000&q=TRAPI', headers={'accept': 'application/json'})
 
         if response_content.status_code != 200:
             return
@@ -50,15 +66,19 @@ class SmartAPI:
                             endpoint_info['operations'] = hit['info']['x-trapi']['operations']
                     endpoints.append(endpoint_info)
 
+        if len(endpoints) == 0:
+            return None
+
         return endpoints
 
 
 
 def main():
 
+    import json
     import argparse
+
     argparser = argparse.ArgumentParser(description='CLI testing of the ResponseCache class')
-    argparser.add_argument('--verbose', action='count', help='If set, print more information about ongoing processing' )
     argparser.add_argument('--get_trapi_endpoints', action='count', help='Get a list of TRAPI 1.1 endpoints')
     argparser.add_argument('--get_operations_endpoints', action='count', help='Get a list of TRAPI 1.1 endpoints that support operations')
     args = argparser.parse_args()
@@ -76,6 +96,7 @@ def main():
     if args.get_operations_endpoints:
         endpoints = smartapi.get_operations_endpoints()
         print(json.dumps(endpoints,sort_keys=True,indent=2))
+
 
 if __name__ == "__main__":
     main()
