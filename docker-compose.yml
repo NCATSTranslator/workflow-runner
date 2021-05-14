@@ -1,0 +1,10 @@
+version: '3.0'
+
+services:
+  workflow_runner:
+    image: workflow_runner
+    container_name: workflow_runner
+    build:
+      context: .
+    ports:
+      - '${PORT}:3084'
