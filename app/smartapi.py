@@ -1,7 +1,4 @@
-"""SmartAPI registry access utility.
-
-Class for querying the SmartAPI registry for TRAPI 1.1 endpoints
-"""
+"""SmartAPI registry access utility."""
 from functools import cache
 
 import httpx
