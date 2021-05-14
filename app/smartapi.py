@@ -1,8 +1,8 @@
 """SmartAPI registry access utility.
 
 Class for querying the SmartAPI registry for TRAPI 1.1 endpoints
-There is no caching. All gets trigger a fresh query.
 """
+from functools import cache
 
 import httpx
 
@@ -14,6 +14,7 @@ class SmartAPI:
         """Initialize."""
         self.base_url = "http://smart-api.info/api"
 
+    @cache
     def get_operations_endpoints(self):
         """Find all endpoints that support at least one workflow operation."""
         endpoints = self.get_trapi_endpoints()
@@ -25,6 +26,7 @@ class SmartAPI:
 
         return operations_endpoints
 
+    @cache
     def get_trapi_endpoints(self):
         """Find all endpoints that match a query for TRAPI."""
         response_content = httpx.get(
