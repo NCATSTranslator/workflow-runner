@@ -14,7 +14,8 @@ from .trapi import TRAPI
 from .smartapi import SmartAPI
 
 LOGGER = logging.getLogger(__name__)
-APP = TRAPI(
+
+openapi_args = dict(
     title="Workflow runner",
     version="1.1.0",
     terms_of_service="",
@@ -27,6 +28,13 @@ APP = TRAPI(
         "x-role": "responsible developer",
     },
 )
+OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
+if OPENAPI_SERVER_URL:
+    openapi_args["servers"] = [
+        {"url": OPENAPI_SERVER_URL}
+    ]
+
+APP = TRAPI(**openapi_args)
 
 endpoints = SmartAPI().get_operations_endpoints()
 SERVICES = defaultdict(list)
