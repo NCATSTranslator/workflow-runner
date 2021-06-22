@@ -52,7 +52,6 @@ async def run_workflow(
 ) -> Response:
     """Run workflow."""
     request_dict = request.dict(
-        by_alias=True,
         exclude_unset=True,
     )
     message = request_dict["message"]
