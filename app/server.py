@@ -5,6 +5,8 @@ import logging
 
 from fastapi import Body
 import httpx
+from pydantic import HttpUrl, ValidationError
+from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
 
 from .util import load_example, drop_nulls
@@ -29,8 +31,13 @@ APP = TRAPI(
 endpoints = SmartAPI().get_operations_endpoints()
 SERVICES = defaultdict(list)
 for endpoint in endpoints:
+    try:
+        base_url = parse_obj_as(HttpUrl, endpoint["url"])
+    except ValidationError as err:
+        LOGGER.warning("Invalid URL '%s': %s", endpoint["url"], err)
+        continue
     for operation in endpoint["operations"]:
-        SERVICES[operation].append(endpoint["url"] + "/query")
+        SERVICES[operation].append(base_url + "/query")
 SERVICES = dict(SERVICES)
 
 
@@ -83,7 +90,7 @@ async def run_workflow(
 
 @APP.get(
     "/services",
-    # response_model=Services,
+    response_model=Services,
 )
 async def get_services() -> Services:
     """Get registered services."""
