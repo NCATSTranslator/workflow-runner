@@ -36,6 +36,12 @@ kubectl port-forward service/workflow-runner <PORT>:7092  # forward to port of y
 
 Access Swagger UI at `http://localhost:<PORT>/docs`.
 
+## configuration
+
+Environment variables have the following effects:
+
+* `OPENAPI_SERVER_URL`: [A URL to the target host.](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#server-object) Important for generating a portable OpenAPI schema.
+
 ## testing
 
 ```bash
