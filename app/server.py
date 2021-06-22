@@ -16,7 +16,7 @@ from .smartapi import SmartAPI
 LOGGER = logging.getLogger(__name__)
 APP = TRAPI(
     title="Workflow runner",
-    version="1.0.0",
+    version="1.1.0",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["SRI"],
