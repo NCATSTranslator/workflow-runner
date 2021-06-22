@@ -1,4 +1,5 @@
 """Workflow runner."""
+from app.models import Services
 from collections import defaultdict
 import logging
 
@@ -30,6 +31,7 @@ SERVICES = defaultdict(list)
 for endpoint in endpoints:
     for operation in endpoint["operations"]:
         SERVICES[operation].append(endpoint["url"] + "/query")
+SERVICES = dict(SERVICES)
 
 
 @APP.post(
@@ -77,3 +79,12 @@ async def run_workflow(
         message=message,
         workflow=workflow,
     )
+
+
+@APP.get(
+    "/services",
+    # response_model=Services,
+)
+async def get_services() -> Services:
+    """Get registered services."""
+    return SERVICES
