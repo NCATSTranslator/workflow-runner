@@ -2,6 +2,9 @@
 
 ## deployment
 
+### Live service
+Available at: https://translator-workflow-runner.renci.org/docs
+
 ### native
 
 ```bash
