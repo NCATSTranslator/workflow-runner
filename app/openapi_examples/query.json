@@ -1,5 +1,12 @@
 {
-    "workflow": [],
+    "workflow": [
+        {
+            "id": "filter_results_top_n",
+            "parameters": {
+                "max_results": 1
+            }
+        }
+    ],
     "message": {
         "query_graph": {
             "nodes": {
