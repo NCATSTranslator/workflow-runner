@@ -26,7 +26,8 @@ def test_query():
         json=REQUEST,
     )
     response.raise_for_status()
-    assert drop_nulls(response.json()) == RESPONSE
+    response_json = response.json()
+    assert len(response_json["message"]["results"]) == 1
 
 
 def test_endpoint():
