@@ -9,6 +9,7 @@ import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
+from starlette.middleware.cors import CORSMiddleware
 
 from .util import load_example, drop_nulls
 from .trapi import TRAPI
@@ -36,6 +37,14 @@ if OPENAPI_SERVER_URL:
     ]
 
 APP = TRAPI(**openapi_args)
+
+APP.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 endpoints = SmartAPI().get_operations_endpoints()
 SERVICES = defaultdict(list)
