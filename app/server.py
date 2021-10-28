@@ -24,9 +24,9 @@ openapi_args = dict(
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
     contact={
-        "name": "Patrick Wang",
-        "email": "patrick@covar.com",
-        "x-id": "patrickkwang",
+        "name": "Kenny Morton",
+        "email": "kenny@covar.com",
+        "x-id": "kennethmorton",
         "x-role": "responsible developer",
     },
 )
