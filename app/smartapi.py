@@ -48,10 +48,15 @@ class SmartAPI:
                 operations = hit["info"]["x-trapi"]["operations"]
             except KeyError:
                 operations = None
+            try:
+                title = hit["info"]["title"]
+            except KeyError:
+                title = None
             endpoints.append({
                 "url": url,
                 "operations": operations,
                 "version": version,
+                "title": title,
             })
 
         return endpoints

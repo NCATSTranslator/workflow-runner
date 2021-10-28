@@ -11,7 +11,8 @@ from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
 from starlette.middleware.cors import CORSMiddleware
 
-from .util import load_example, drop_nulls
+from .logging import gen_logger
+from .util import load_example, drop_nulls, post_safely
 from .trapi import TRAPI
 from .smartapi import SmartAPI
 
@@ -54,8 +55,9 @@ for endpoint in endpoints:
     except ValidationError as err:
         LOGGER.warning("Invalid URL '%s': %s", endpoint["url"], err)
         continue
+    endpoint["url"] = base_url + "/query"
     for operation in endpoint["operations"]:
-        SERVICES[operation].append(base_url + "/query")
+        SERVICES[operation].append(endpoint)
 SERVICES = dict(SERVICES)
 
 
@@ -83,26 +85,32 @@ async def run_workflow(
     )
     message = request_dict["message"]
     workflow = request_dict["workflow"]
+    logger = gen_logger()
     async with httpx.AsyncClient() as client:
         for operation in workflow:
-            url = SERVICES[operation["id"]][0]  # just take the first one
-            LOGGER.debug(f"POSTing operation '{operation}' to {url}...")
-            response = await client.post(
+            service = SERVICES[operation["id"]][0]  # just take the first one
+            url = service["url"]
+            service_name = service["title"]
+            logger.debug(f"Requesting operation '{operation}' from {service_name}...")
+            response = await post_safely(
                 url,
-                json={
+                {
                     "message": message,
                     "workflow": [
                         operation,
                     ],
                 },
+                client=client,
                 timeout=30.0,
+                logger=logger,
+                service_name=service_name,
             )
-            if response.status_code > 200:
-                raise ValueError(str(response.status_code) + ": " + response.text)
-            message = drop_nulls(response.json()["message"])
+            logger.debug(f"Received operation '{operation}' from {service_name}...")
+            message = drop_nulls(response["message"])
     return Response(
         message=message,
         workflow=workflow,
+        logs=logger.handlers[0].store,
     )
 
 
