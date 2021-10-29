@@ -24,6 +24,7 @@ openapi_args = dict(
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
+    infores="infores:workflow-runner",
     contact={
         "name": "Kenny Morton",
         "email": "kenny@covar.com",
