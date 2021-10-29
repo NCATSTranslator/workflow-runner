@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.2.0",
+    version="1.2.1",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
