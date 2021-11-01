@@ -63,7 +63,10 @@ for endpoint in endpoints:
         LOGGER.warning("Invalid URL '%s': %s", endpoint["url"], err)
         continue
     endpoint["url"] = base_url + "/query"
-    for operation in endpoint["operations"]:
+    
+    # Popped for cleanliness in /services enpoint
+    operations = endpoint.pop("operations") 
+    for operation in operations:
         SERVICES[operation].append(endpoint)
 SERVICES = dict(SERVICES)
 
