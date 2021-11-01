@@ -33,11 +33,13 @@ openapi_args = dict(
 )
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
+OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
         {
             "url": OPENAPI_SERVER_URL,
             "x-maturity": OPENAPI_SERVER_MATURITY,
+            "x-location": OPENAPI_SERVER_LOCATION,
         },
     ]
 
