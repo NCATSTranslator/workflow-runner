@@ -60,8 +60,20 @@ for endpoint in endpoints:
     try:
         base_url = parse_obj_as(HttpUrl, endpoint["url"])
     except ValidationError as err:
-        LOGGER.warning("Invalid URL '%s': %s", endpoint["url"], err)
-        continue
+        # It may contain a relative path
+        # This is aloud by smart-api
+        # And is relative to the source_url for the open-api doc
+        # https://spec.openapis.org/oas/latest.html#server-object
+        #
+        # The url can also reference variables in {brackets}
+        # This is not yet supported here
+        try:
+            source_url_stem = endpoint["source_url"][:endpoint["source_url"].rfind("/")]
+            full_url = source_url_stem + endpoint["url"] 
+            base_url = parse_obj_as(HttpUrl, full_url)
+        except ValidationError as err:
+            LOGGER.warning("Invalid URL '%s' '%s': %s", endpoint["source_url"], endpoint["url"], err)
+            continue
     endpoint["url"] = base_url + "/query"
     
     # Popped for cleanliness in /services enpoint

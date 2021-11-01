@@ -37,6 +37,10 @@ class SmartAPI:
         endpoints = []
         for hit in response_dict["hits"]:
             try:
+                source_url = hit["_meta"]["url"]
+            except (KeyError, IndexError):
+                source_url = None
+            try:
                 url = hit["servers"][0]["url"]
             except (KeyError, IndexError):
                 url = None
@@ -53,6 +57,7 @@ class SmartAPI:
             except KeyError:
                 title = None
             endpoints.append({
+                "source_url": source_url,
                 "url": url,
                 "operations": operations,
                 "version": version,
