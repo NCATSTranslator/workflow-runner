@@ -29,6 +29,20 @@ def test_query():
     response_json = response.json()
     assert len(response_json["message"]["results"]) == 1
 
+def test_services():
+    """Test calling /query endpoint."""
+    response = testclient.get("/services")
+    response.raise_for_status()
+    response_json = response.json()
+
+    # The response here should be a dict
+    # where keys are operations and values
+    # are a list of urls.
+    # This is a basic check
+    # We could go deeper and look for urls
+
+    assert isinstance(response_json, dict)
+
 
 def test_endpoint():
     """Test getting OpenAPI."""
