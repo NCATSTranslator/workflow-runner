@@ -71,6 +71,15 @@ for endpoint in endpoints:
         except ValidationError as err:
             LOGGER.warning("Invalid URL '%s' '%s': %s", endpoint["source_url"], endpoint["url"], err)
             continue
+    # Now actualy check if we can contact the endpoint
+    response = httpx.get(base_url + "/query")
+    if response.status_code == 404:
+        # Not a valid URL
+        LOGGER.warning("404 recieved for '%s'", base_url)
+        continue
+    # More than likely this is a 405 or some other error
+    # Any response at this point is good
+
     endpoint["url"] = base_url + "/query"
     for operation in endpoint["operations"]:
         SERVICES[operation].append(endpoint)
