@@ -1,0 +1,15 @@
+anyio==3.4.0
+certifi==2021.10.8
+click==7.1.2
+fastapi==0.63.0
+h11==0.12.0
+httpcore==0.13.7
+httpx==0.18.1
+idna==3.3
+pydantic==1.8.2
+reasoner-pydantic==1.2.0.4
+rfc3986==1.5.0
+sniffio==1.2.0
+starlette==0.13.6
+typing_extensions==4.0.1
+uvicorn==0.13.3
