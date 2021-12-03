@@ -6,8 +6,12 @@ WORKDIR /app
 ADD requirements-lock.txt .
 RUN pip install -r requirements-lock.txt
 
+# Test requirements
+ADD requirements-test-lock.txt .
+RUN pip install -r requirements-test-lock.txt
+
 # set up source
 ADD . .
 
 # set up entrypoint
-ENTRYPOINT ["./main.sh"]
+CMD pytest

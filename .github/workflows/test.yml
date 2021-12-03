@@ -36,3 +36,13 @@ jobs:
         with:
           file: ./coverage.xml
           env_vars: OS,PYTHON
+
+  verify-lock:
+    name: Verify lockfiles are up to date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Verify lockfiles
+        run: python manage.py verify_locked

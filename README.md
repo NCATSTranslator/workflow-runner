@@ -45,7 +45,21 @@ Environment variables have the following effects:
 
 * `OPENAPI_SERVER_URL`: [A URL to the target host.](https://github.com/OAI/OpenAPI-Specification/blob/main/versions/3.0.3.md#server-object) Important for generating a portable OpenAPI schema.
 
-## testing
+## Local Development
+
+### Management Script
+
+The codebase comes with a zero-dependency python management script that can be used to automate basic local development tasks. Make sure you have docker and docker-compose installed and then run:
+
+```bash
+./manage.py dev # starts server accessible at 5781
+./manage.py test # run tests
+./manage.py lock # update lockfile if requirements.txt has changed
+```
+
+### Without Management Script
+
+Testing:
 
 ```bash
 python -m pytest tests/ --cov app --cov-report term-missing
