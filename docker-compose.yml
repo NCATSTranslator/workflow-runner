@@ -7,4 +7,4 @@ services:
     build:
       context: .
     ports:
-      - '${PORT}:3084'
+      - '${PORT:-3084}:3084'
