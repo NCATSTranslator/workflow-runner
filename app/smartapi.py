@@ -41,11 +41,13 @@ class SmartAPI:
         endpoints = []
         for hit in response_dict["hits"]:
             try:
-                # check the maturity level against workflow-runner maturity
+                url = None
                 x_maturity = None
+                # check the maturity level against workflow-runner maturity
                 for server in hit["servers"]:
                     if server["x-maturity"] == OPENAPI_SERVER_MATURITY:
                         x_maturity = server["x-maturity"]
+                        url = server["url"]
                         break
                 if x_maturity is None:
                     continue
@@ -55,13 +57,6 @@ class SmartAPI:
                 source_url = hit["_meta"]["url"]
             except (KeyError, IndexError):
                 source_url = None
-            try:
-                for server in hit["servers"]:
-                    if server["x-maturity"] == x_maturity:
-                        url = server["url"]
-                        break
-            except (KeyError, IndexError):
-                url = None
             try:
                 version = hit["info"]["x-trapi"]["version"]
             except KeyError:
