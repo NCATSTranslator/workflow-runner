@@ -51,13 +51,15 @@ class SmartAPI:
                     continue
             except (KeyError):
                 continue
-            print("\n", hit["servers"], "\n")
             try:
                 source_url = hit["_meta"]["url"]
             except (KeyError, IndexError):
                 source_url = None
             try:
-                url = hit["servers"][0]["url"]
+                for server in hit["servers"]:
+                    if server["x-maturity"] == x_maturity:
+                        url = server["url"]
+                        break
             except (KeyError, IndexError):
                 url = None
             try:
