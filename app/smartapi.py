@@ -1,7 +1,11 @@
 """SmartAPI registry access utility."""
 from functools import cache
 
+import os
 import httpx
+
+# get workflow-runner maturity level
+OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 
 
 class SmartAPI:
@@ -37,6 +41,18 @@ class SmartAPI:
         endpoints = []
         for hit in response_dict["hits"]:
             try:
+                # check the maturity level against workflow-runner maturity
+                x_maturity = None
+                for server in hit["servers"]:
+                    if server["x-maturity"] == OPENAPI_SERVER_MATURITY:
+                        x_maturity = server["x-maturity"]
+                        break
+                if x_maturity is None:
+                    continue
+            except (KeyError):
+                continue
+            print("\n", hit["servers"], "\n")
+            try:
                 source_url = hit["_meta"]["url"]
             except (KeyError, IndexError):
                 source_url = None
@@ -62,6 +78,7 @@ class SmartAPI:
                 "operations": operations,
                 "version": version,
                 "title": title,
+                "x-maturity": x_maturity
             })
 
         return endpoints
