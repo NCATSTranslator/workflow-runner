@@ -4,16 +4,15 @@ from functools import cache
 import os
 import httpx
 
-# get workflow-runner maturity level
-OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
-
 
 class SmartAPI:
     """SmartAPI."""
 
-    def __init__(self):
+    def __init__(self, maturity):
         """Initialize."""
         self.base_url = "http://smart-api.info/api"
+        # get workflow-runner maturity level
+        self.maturity = maturity
 
     @cache
     def get_operations_endpoints(self):
@@ -45,9 +44,9 @@ class SmartAPI:
                 x_maturity = None
                 # check the maturity level against workflow-runner maturity
                 for server in hit["servers"]:
-                    if server["x-maturity"] == OPENAPI_SERVER_MATURITY:
+                    if server["x-maturity"] == self.maturity:
                         x_maturity = server["x-maturity"]
-                        url = server["url"]
+                        url = server.get("url", None)
                         break
                 if x_maturity is None:
                     continue
