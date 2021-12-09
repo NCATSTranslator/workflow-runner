@@ -54,7 +54,8 @@ APP.add_middleware(
     allow_headers=["*"],
 )
 
-# Global services dict. Is set on initialization
+# Global services dict.
+# It is set on app startup and on POST /refresh through a global reference.
 SERVICES = defaultdict(list)
 
 
@@ -132,6 +133,7 @@ async def get_services() -> Services:
 async def refresh_services():
     """Fetch available services from smartapi."""
     global SERVICES
+    # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
     endpoints = SmartAPI(OPENAPI_SERVER_MATURITY).get_operations_endpoints()
     for endpoint in endpoints:
