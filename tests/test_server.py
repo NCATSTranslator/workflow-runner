@@ -21,6 +21,7 @@ with open(EXAMPLE_DIR / "response.json") as stream:
 
 def test_query():
     """Test calling /query endpoint."""
+    response = testclient.post("/refresh")
     response = testclient.post(
         "/query",
         json=REQUEST,
