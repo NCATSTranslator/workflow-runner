@@ -54,42 +54,8 @@ APP.add_middleware(
     allow_headers=["*"],
 )
 
-endpoints = SmartAPI(OPENAPI_SERVER_MATURITY).get_operations_endpoints()
+# Global services dict. Is set on initialization
 SERVICES = defaultdict(list)
-for endpoint in endpoints:
-    try:
-        base_url = parse_obj_as(HttpUrl, endpoint["url"])
-    except ValidationError as err:
-        # It may contain a relative path
-        # This is aloud by smart-api
-        # And is relative to the source_url for the open-api doc
-        # https://spec.openapis.org/oas/latest.html#server-object
-        #
-        # The url can also reference variables in {brackets}
-        # This is not yet supported here
-        try:
-            source_url_stem = endpoint["source_url"][:endpoint["source_url"].rfind("/")]
-            full_url = source_url_stem + endpoint["url"]
-            base_url = parse_obj_as(HttpUrl, full_url)
-        except ValidationError as err:
-            LOGGER.warning("Invalid URL '%s' '%s': %s", endpoint["source_url"], endpoint["url"], err)
-            continue
-    # Now actualy check if we can contact the endpoint
-    response = httpx.get(base_url + "/query")
-    if response.status_code == 404:
-        # Not a valid URL
-        LOGGER.warning("404 recieved for '%s'", base_url)
-        continue
-    # More than likely this is a 405 or some other error
-    # Any response at this point is good
-
-    endpoint["url"] = base_url + "/query"
-
-    # Popped for cleanliness in /services enpoint
-    operations = endpoint.pop("operations")
-    for operation in operations:
-        SERVICES[operation].append(endpoint)
-SERVICES = dict(SERVICES)
 
 
 @APP.post(
@@ -159,3 +125,52 @@ async def run_workflow(
 async def get_services() -> Services:
     """Get registered services."""
     return SERVICES
+
+
+@APP.on_event("startup")
+@APP.post("/refresh")
+async def refresh_services():
+    """Fetch available services from smartapi."""
+    global SERVICES
+    SERVICES = defaultdict(list)
+    endpoints = SmartAPI(OPENAPI_SERVER_MATURITY).get_operations_endpoints()
+    for endpoint in endpoints:
+        try:
+            base_url = parse_obj_as(HttpUrl, endpoint["url"])
+        except ValidationError as err:
+            # It may contain a relative path
+            # This is aloud by smart-api
+            # And is relative to the source_url for the open-api doc
+            # https://spec.openapis.org/oas/latest.html#server-object
+            #
+            # The url can also reference variables in {brackets}
+            # This is not yet supported here
+            try:
+                source_url_stem = endpoint["source_url"][:endpoint["source_url"].rfind("/")]
+                full_url = source_url_stem + endpoint["url"]
+                base_url = parse_obj_as(HttpUrl, full_url)
+            except ValidationError as err:
+                LOGGER.warning("Invalid URL '%s' '%s': %s", endpoint["source_url"], endpoint["url"], err)
+                continue
+        # Now actualy check if we can contact the endpoint
+        try:
+            response = httpx.get(base_url + "/query")
+        except (httpx.ReadTimeout, httpx.ConnectError):
+            LOGGER.warning("Discarding '%s'", base_url)
+            continue
+        if response.status_code == 404:
+            # Not a valid URL
+            LOGGER.warning("404 recieved for '%s'", base_url)
+            continue
+        # More than likely this is a 405 or some other error
+        # Any response at this point is good
+
+        endpoint["url"] = base_url + "/query"
+
+        # Popped for cleanliness in /services enpoint
+        operations = endpoint.pop("operations")
+        for operation in operations:
+            SERVICES[operation].append(endpoint)
+    SERVICES = dict(SERVICES)
+
+    return "Workflow services refreshed successfully."
