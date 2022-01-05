@@ -119,25 +119,32 @@ async def run_workflow(
     logger = gen_logger()
     async with httpx.AsyncClient() as client:
         for operation in workflow:
-            service = SERVICES[operation["id"]][0]  # just take the first one
-            url = service["url"]
-            service_name = service["title"]
-            logger.debug(f"Requesting operation '{operation}' from {service_name}...")
-            response = await post_safely(
-                url,
-                {
-                    "message": message,
-                    "workflow": [
-                        operation,
-                    ],
-                },
-                client=client,
-                timeout=30.0,
-                logger=logger,
-                service_name=service_name,
-            )
-            logger.debug(f"Received operation '{operation}' from {service_name}...")
-            message = drop_nulls(response["message"])
+            service_operation_responses = []
+            for service in SERVICES[operation["id"]]:
+                # service = SERVICES[operation["id"]][0]  # just take the first one
+                url = service["url"]
+                service_name = service["title"]
+                logger.debug(f"Requesting operation '{operation}' from {service_name}...")
+                response = await post_safely(
+                    url,
+                    {
+                        "message": message,
+                        "workflow": [
+                            operation,
+                        ],
+                    },
+                    client=client,
+                    timeout=30.0,
+                    logger=logger,
+                    service_name=service_name,
+                )
+                logger.debug(f"Received operation '{operation}' from {service_name}...")
+                # message = drop_nulls(response["message"])
+                service_operation_responses.append(response)
+            
+            logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
+            
+
     return Response(
         message=message,
         workflow=workflow,
