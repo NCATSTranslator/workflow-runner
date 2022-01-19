@@ -103,6 +103,7 @@ async def run_workflow(
                             "workflow": [
                                 operation,
                             ],
+                            "submitter": "Workflow Runner",
                         },
                         client=client,
                         timeout=30.0,
