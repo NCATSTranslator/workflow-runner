@@ -31,7 +31,7 @@ def test_query():
     assert len(response_json["message"]["results"]) == 1
 
 def test_services():
-    """Test calling /query endpoint."""
+    """Test calling /services endpoint."""
     response = testclient.get("/services")
     response.raise_for_status()
     response_json = response.json()
