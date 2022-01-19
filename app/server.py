@@ -1,4 +1,5 @@
 """Workflow runner."""
+from re import M
 from app.models import Services
 from collections import defaultdict
 import logging
@@ -9,6 +10,7 @@ import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
+from reasoner_pydantic import Message 
 from starlette.middleware.cors import CORSMiddleware
 
 from .logging import gen_logger
@@ -84,6 +86,7 @@ async def run_workflow(
     message = request_dict["message"]
     workflow = request_dict["workflow"]
     logger = gen_logger()
+    qgraph = message["query_graph"]
     async with httpx.AsyncClient() as client:
         for operation in workflow:
             service_operation_responses = []
@@ -92,26 +95,36 @@ async def run_workflow(
                 url = service["url"]
                 service_name = service["title"]
                 logger.debug(f"Requesting operation '{operation}' from {service_name}...")
-                response = await post_safely(
-                    url,
-                    {
-                        "message": message,
-                        "workflow": [
-                            operation,
-                        ],
-                    },
-                    client=client,
-                    timeout=30.0,
-                    logger=logger,
-                    service_name=service_name,
-                )
-                logger.debug(f"Received operation '{operation}' from {service_name}...")
-                # message = drop_nulls(response["message"])
-                service_operation_responses.append(response)
+                try:
+                    response = await post_safely(
+                        url,
+                        {
+                            "message": message,
+                            "workflow": [
+                                operation,
+                            ],
+                        },
+                        client=client,
+                        timeout=30.0,
+                        logger=logger,
+                        service_name=service_name,
+                    )
+                    logger.debug(f"Received operation '{operation}' from {service_name}...")
+                    # message = drop_nulls(response["message"])
+
+                    service_operation_responses.append(response)
+                except RuntimeError as e:
+                    logger.warning({
+                        "error": str(e)
+                    })
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
-            
-
+            m = Message(query_graph=qgraph, results = [])
+            for response in service_operation_responses:
+                response["message"]["query_graph"] = qgraph
+                m.update(Message.parse_obj(response["message"]))
+            message = m.dict()
+        
     return Response(
         message=message,
         workflow=workflow,
