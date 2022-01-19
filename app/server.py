@@ -91,7 +91,6 @@ async def run_workflow(
         for operation in workflow:
             service_operation_responses = []
             for service in SERVICES[operation["id"]]:
-                # service = SERVICES[operation["id"]][0]  # just take the first one
                 url = service["url"]
                 service_name = service["title"]
                 logger.debug(f"Requesting operation '{operation}' from {service_name}...")
@@ -111,7 +110,6 @@ async def run_workflow(
                         service_name=service_name,
                     )
                     logger.debug(f"Received operation '{operation}' from {service_name}...")
-                    # message = drop_nulls(response["message"])
 
                     service_operation_responses.append(response)
                 except RuntimeError as e:
