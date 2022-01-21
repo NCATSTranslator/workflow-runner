@@ -86,9 +86,6 @@ async def run_workflow(
     request_dict = request.dict(
         exclude_unset=True,
     )
-
-    global OPERATIONS
-    OPERATIONS = StandardOperations().get_operations()
     
     message = request_dict["message"]
     workflow = request_dict["workflow"]
