@@ -1,6 +1,6 @@
 """Workflow runner."""
 from re import M
-from app.models import Services
+from app.models import Services, Operations
 from collections import defaultdict
 import logging
 import os
@@ -17,6 +17,7 @@ from .logging import gen_logger
 from .util import load_example, drop_nulls, post_safely
 from .trapi import TRAPI
 from .smartapi import SmartAPI
+from .standard_operations import StandardOperations
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +61,8 @@ APP.add_middleware(
 # It is set on app startup and on POST /refresh through a global reference.
 SERVICES = defaultdict(list)
 
+# Global operations
+OPERATIONS = defaultdict(dict)
 
 @APP.post(
         "/query",
@@ -139,11 +142,18 @@ async def get_services() -> Services:
     """Get registered services."""
     return SERVICES
 
+@APP.get(
+    "/operations",
+    response_model=Operations,
+)
+async def get_operations() -> Operations:
+    """Get registered services."""
+    return OPERATIONS
 
 @APP.on_event("startup")
 @APP.post("/refresh")
-async def refresh_services():
-    """Fetch available services from smartapi."""
+async def refresh_services_and_operations():
+    """Fetch available services from smartapi and operations from standards.ncats.io"""
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
@@ -187,4 +197,8 @@ async def refresh_services():
             SERVICES[operation].append(endpoint)
     SERVICES = dict(SERVICES)
 
-    return "Workflow services refreshed successfully."
+    # Update Operations
+    global OPERATIONS
+    OPERATIONS = StandardOperations().get_operations()
+
+    return "Workflow services and oeprations refreshed successfully."
