@@ -86,6 +86,10 @@ async def run_workflow(
     request_dict = request.dict(
         exclude_unset=True,
     )
+
+    global OPERATIONS
+    OPERATIONS = StandardOperations().get_operations()
+    
     message = request_dict["message"]
     workflow = request_dict["workflow"]
     logger = gen_logger()
@@ -115,10 +119,15 @@ async def run_workflow(
                     logger.debug(f"Received operation '{operation}' from {service_name}...")
 
                     service_operation_responses.append(response)
+                
                 except RuntimeError as e:
                     logger.warning({
                         "error": str(e)
                     })
+
+                if not OPERATIONS[operation["id"]]["unique"] and len(service_operation_responses) == 1:
+                    # We only need one successful response for non-unique operations
+                    break
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
             m = Message(query_graph=qgraph, results = [])
@@ -147,7 +156,7 @@ async def get_services() -> Services:
     response_model=Operations,
 )
 async def get_operations() -> Operations:
-    """Get registered services."""
+    """Get available operations."""
     return OPERATIONS
 
 @APP.on_event("startup")
