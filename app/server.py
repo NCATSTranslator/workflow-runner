@@ -35,14 +35,17 @@ openapi_args = dict(
         "x-role": "responsible developer",
     },
 )
+NODE_NORM_URL = "https://nodenormalization-sri.renci.org"
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
-OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
+OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "production")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
+WORKFLOW_RUNNER_MATURITY = os.getenv("WORKFLOW_RUNNER_MATURITY", "development")
+
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
         {
             "url": OPENAPI_SERVER_URL,
-            "x-maturity": OPENAPI_SERVER_MATURITY,
+            "x-maturity": WORKFLOW_RUNNER_MATURITY,
             "x-location": OPENAPI_SERVER_LOCATION,
         },
     ]
@@ -132,6 +135,20 @@ async def run_workflow(
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
             message = m.dict()
+
+            try:
+                response = await post_safely(
+                    NODE_NORM_URL + "/response",
+                    {
+                        "message": message,
+                        "submitter": "Workflow Runner"
+                    }
+                )
+                message = response["message"]
+            except RuntimeError as e:
+                logger.warning({
+                    "error": str(e)
+                })
         
     return Response(
         message=message,
