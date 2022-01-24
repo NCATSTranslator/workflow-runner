@@ -39,6 +39,8 @@ class SmartAPI:
 
         endpoints = []
         for hit in response_dict["hits"]:
+            if "/query" not in hit["paths"].keys():
+                continue
             try:
                 url = None
                 x_maturity = None
