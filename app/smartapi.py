@@ -39,7 +39,10 @@ class SmartAPI:
 
         endpoints = []
         for hit in response_dict["hits"]:
-            if "/query" not in hit["paths"].keys():
+            try:
+                if "/query" not in hit["paths"].keys():
+                    continue
+            except KeyError:
                 continue
             try:
                 url = None
