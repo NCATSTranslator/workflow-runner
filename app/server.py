@@ -35,17 +35,17 @@ openapi_args = dict(
         "x-role": "responsible developer",
     },
 )
-NODE_NORM_URL = "https://nodenormalization-sri.renci.org"
+NORMALIZER_URL = os.getenv("NORMALIZER_URL", "https://nodenormalization-sri.renci.org")
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
-OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "production")
+OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
-WORKFLOW_RUNNER_MATURITY = os.getenv("WORKFLOW_RUNNER_MATURITY", "development")
+SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "production")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
         {
             "url": OPENAPI_SERVER_URL,
-            "x-maturity": WORKFLOW_RUNNER_MATURITY,
+            "x-maturity": OPENAPI_SERVER_MATURITY,
             "x-location": OPENAPI_SERVER_LOCATION,
         },
     ]
@@ -138,7 +138,7 @@ async def run_workflow(
 
             try:
                 response = await post_safely(
-                    NODE_NORM_URL + "/response",
+                    NORMALIZER_URL + "/response",
                     {
                         "message": message,
                         "submitter": "Workflow Runner"
@@ -180,7 +180,7 @@ async def refresh_services_and_operations():
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
-    endpoints = SmartAPI(OPENAPI_SERVER_MATURITY).get_operations_endpoints()
+    endpoints = SmartAPI(SERVICES_MATURITY).get_operations_endpoints()
     for endpoint in endpoints:
         try:
             base_url = parse_obj_as(HttpUrl, endpoint["url"])
