@@ -224,4 +224,4 @@ async def refresh_services_and_operations():
     global OPERATIONS
     OPERATIONS = StandardOperations().get_operations()
 
-    return "Workflow services and oeprations refreshed successfully."
+    return "Workflow services and operations refreshed successfully."
