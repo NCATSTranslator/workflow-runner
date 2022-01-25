@@ -130,7 +130,7 @@ async def run_workflow(
                     break
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
-            m = Message(query_graph=qgraph, results = [])
+            m = Message(query_graph=qgraph)
             for response in service_operation_responses:
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
