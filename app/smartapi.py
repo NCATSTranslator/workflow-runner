@@ -40,6 +40,11 @@ class SmartAPI:
         endpoints = []
         for hit in response_dict["hits"]:
             try:
+                if "/query" not in hit["paths"].keys():
+                    continue
+            except KeyError:
+                continue
+            try:
                 url = None
                 x_maturity = None
                 # check the maturity level against workflow-runner maturity

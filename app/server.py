@@ -1,5 +1,6 @@
 """Workflow runner."""
-from app.models import Services
+from re import M
+from app.models import Services, Operations
 from collections import defaultdict
 import logging
 import os
@@ -9,12 +10,14 @@ import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
+from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph
 from starlette.middleware.cors import CORSMiddleware
 
 from .logging import gen_logger
 from .util import load_example, drop_nulls, post_safely
 from .trapi import TRAPI
 from .smartapi import SmartAPI
+from .standard_operations import StandardOperations
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +35,12 @@ openapi_args = dict(
         "x-role": "responsible developer",
     },
 )
+NORMALIZER_URL = os.getenv("NORMALIZER_URL", "https://nodenormalization-sri.renci.org")
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
+SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "production")
+
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
         {
@@ -58,6 +64,8 @@ APP.add_middleware(
 # It is set on app startup and on POST /refresh through a global reference.
 SERVICES = defaultdict(list)
 
+# Global operations
+OPERATIONS = defaultdict(dict)
 
 @APP.post(
         "/query",
@@ -81,30 +89,71 @@ async def run_workflow(
     request_dict = request.dict(
         exclude_unset=True,
     )
+    
     message = request_dict["message"]
     workflow = request_dict["workflow"]
     logger = gen_logger()
+    qgraph = message["query_graph"]
+    kgraph = message["knowledge_graph"]
     async with httpx.AsyncClient() as client:
         for operation in workflow:
-            service = SERVICES[operation["id"]][0]  # just take the first one
-            url = service["url"]
-            service_name = service["title"]
-            logger.debug(f"Requesting operation '{operation}' from {service_name}...")
-            response = await post_safely(
-                url,
-                {
-                    "message": message,
-                    "workflow": [
-                        operation,
-                    ],
-                },
-                client=client,
-                timeout=30.0,
-                logger=logger,
-                service_name=service_name,
-            )
-            logger.debug(f"Received operation '{operation}' from {service_name}...")
-            message = drop_nulls(response["message"])
+            service_operation_responses = []
+            for service in SERVICES[operation["id"]]:
+                url = service["url"]
+                service_name = service["title"]
+                logger.debug(f"Requesting operation '{operation}' from {service_name}...")
+                try:
+                    response = await post_safely(
+                        url,
+                        {
+                            "message": message,
+                            "workflow": [
+                                operation,
+                            ],
+                            "submitter": "Workflow Runner",
+                        },
+                        client=client,
+                        timeout=60.0,
+                        logger=logger,
+                        service_name=service_name,
+                    )
+                    logger.debug(f"Received operation '{operation}' from {service_name}...")
+
+                    service_operation_responses.append(response)
+                
+                except RuntimeError as e:
+                    logger.warning({
+                        "error": str(e)
+                    })
+
+                if not OPERATIONS[operation["id"]]["unique"] and len(service_operation_responses) == 1:
+                    # We only need one successful response for non-unique operations
+                    break
+            
+            logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
+            m = Message(
+                query_graph=QueryGraph.parse_obj(qgraph), 
+                knowledge_graph=KnowledgeGraph.parse_obj({"nodes": {}, "edges": {}}),
+                )
+            for response in service_operation_responses:
+                response["message"]["query_graph"] = qgraph
+                m.update(Message.parse_obj(response["message"]))
+            message = m.dict()
+
+            try:
+                response = await post_safely(
+                    NORMALIZER_URL + "/response",
+                    {
+                        "message": message,
+                        "submitter": "Workflow Runner"
+                    }
+                )
+                message = response["message"]
+            except RuntimeError as e:
+                logger.warning({
+                    "error": str(e)
+                })
+        
     return Response(
         message=message,
         workflow=workflow,
@@ -120,15 +169,22 @@ async def get_services() -> Services:
     """Get registered services."""
     return SERVICES
 
+@APP.get(
+    "/operations",
+    response_model=Operations,
+)
+async def get_operations() -> Operations:
+    """Get available operations."""
+    return OPERATIONS
 
 @APP.on_event("startup")
 @APP.post("/refresh")
-async def refresh_services():
-    """Fetch available services from smartapi."""
+async def refresh_services_and_operations():
+    """Fetch available services from smartapi and operations from standards.ncats.io"""
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
-    endpoints = SmartAPI(OPENAPI_SERVER_MATURITY).get_operations_endpoints()
+    endpoints = SmartAPI(SERVICES_MATURITY).get_operations_endpoints()
     for endpoint in endpoints:
         try:
             base_url = parse_obj_as(HttpUrl, endpoint["url"])
@@ -168,4 +224,8 @@ async def refresh_services():
             SERVICES[operation].append(endpoint)
     SERVICES = dict(SERVICES)
 
-    return "Workflow services refreshed successfully."
+    # Update Operations
+    global OPERATIONS
+    OPERATIONS = StandardOperations().get_operations()
+
+    return "Workflow services and operations refreshed successfully."
