@@ -10,7 +10,7 @@ import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
-from reasoner_pydantic import Message 
+from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph
 from starlette.middleware.cors import CORSMiddleware
 
 from .logging import gen_logger
@@ -94,6 +94,7 @@ async def run_workflow(
     workflow = request_dict["workflow"]
     logger = gen_logger()
     qgraph = message["query_graph"]
+    kgraph = message["knowledge_graph"]
     async with httpx.AsyncClient() as client:
         for operation in workflow:
             service_operation_responses = []
@@ -112,7 +113,7 @@ async def run_workflow(
                             "submitter": "Workflow Runner",
                         },
                         client=client,
-                        timeout=30.0,
+                        timeout=60.0,
                         logger=logger,
                         service_name=service_name,
                     )
@@ -130,7 +131,10 @@ async def run_workflow(
                     break
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
-            m = Message(query_graph=qgraph)
+            m = Message(
+                query_graph=QueryGraph.parse_obj(qgraph), 
+                knowledge_graph=KnowledgeGraph.parse_obj({"nodes": {}, "edges": {}}),
+                )
             for response in service_operation_responses:
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
