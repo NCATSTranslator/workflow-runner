@@ -94,8 +94,12 @@ async def run_workflow(
     workflow = request_dict["workflow"]
     logger = gen_logger()
     qgraph = message["query_graph"]
-    kgraph = message["knowledge_graph"]
-    async with httpx.AsyncClient(verify=False, timeout=60.0 * 5) as client:
+    kgraph = {"nodes": {}, "edges": {}}
+    if "knowledge_graph" in message.keys():
+        if "nodes" in message["knowledge_graph"].keys():
+            kgraph = message["knowledge_graph"]
+            
+    async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
         for operation in workflow:
             service_operation_responses = []
             for service in SERVICES[operation["id"]]:
@@ -133,7 +137,7 @@ async def run_workflow(
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
             m = Message(
                 query_graph=QueryGraph.parse_obj(qgraph), 
-                knowledge_graph=KnowledgeGraph.parse_obj({"nodes": {}, "edges": {}}),
+                knowledge_graph=KnowledgeGraph.parse_obj(kgraph),
                 )
             for response in service_operation_responses:
                 response["message"]["query_graph"] = qgraph
