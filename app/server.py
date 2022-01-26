@@ -95,7 +95,7 @@ async def run_workflow(
     logger = gen_logger()
     qgraph = message["query_graph"]
     kgraph = message["knowledge_graph"]
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(verify=False, timeout=60.0 * 5) as client:
         for operation in workflow:
             service_operation_responses = []
             for service in SERVICES[operation["id"]]:
