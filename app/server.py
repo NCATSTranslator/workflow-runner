@@ -113,7 +113,7 @@ async def run_workflow(
                             "submitter": "Workflow Runner",
                         },
                         client=client,
-                        timeout=60.0,
+                        timeout=60.0 * 5,
                         logger=logger,
                         service_name=service_name,
                     )
@@ -146,7 +146,11 @@ async def run_workflow(
                     {
                         "message": message,
                         "submitter": "Workflow Runner"
-                    }
+                    },
+                    client=client,
+                    timeout=60.0 * 5,
+                    logger=logger,
+                    service_name="node_normalizer"
                 )
                 message = response["message"]
             except RuntimeError as e:
@@ -206,8 +210,8 @@ async def refresh_services_and_operations():
         # Now actualy check if we can contact the endpoint
         try:
             response = httpx.get(base_url + "/query")
-        except (httpx.ReadTimeout, httpx.ConnectError):
-            LOGGER.warning("Discarding '%s'", base_url)
+        except (httpx.ReadTimeout, httpx.ConnectError, httpx.ConnectTimeout):
+            LOGGER.warning("Discarding '%s due to timeout.", base_url)
             continue
         if response.status_code == 404:
             # Not a valid URL
