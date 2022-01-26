@@ -117,11 +117,28 @@ async def run_workflow(
                             "submitter": "Workflow Runner",
                         },
                         client=client,
-                        timeout=60.0 * 5,
+                        timeout=60.0,
                         logger=logger,
                         service_name=service_name,
                     )
                     logger.debug(f"Received operation '{operation}' from {service_name}...")
+
+                    try:
+                        response = await post_safely(
+                            NORMALIZER_URL + "/response",
+                            {
+                                "message": response["message"],
+                                "submitter": "Workflow Runner"
+                            },
+                            client=client,
+                            timeout=60.0,
+                            logger=logger,
+                            service_name="node_normalizer"
+                        )
+                    except RuntimeError as e:
+                        logger.warning({
+                            "error": str(e)
+                        })
 
                     service_operation_responses.append(response)
                 
@@ -143,24 +160,6 @@ async def run_workflow(
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
             message = m.dict()
-
-            try:
-                response = await post_safely(
-                    NORMALIZER_URL + "/response",
-                    {
-                        "message": message,
-                        "submitter": "Workflow Runner"
-                    },
-                    client=client,
-                    timeout=60.0 * 5,
-                    logger=logger,
-                    service_name="node_normalizer"
-                )
-                message = response["message"]
-            except RuntimeError as e:
-                logger.warning({
-                    "error": str(e)
-                })
         
     return Response(
         message=message,
