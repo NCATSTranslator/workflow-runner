@@ -15,7 +15,7 @@
                     "is_set": false
                 },
                 "drug": {
-                    "categories": ["biolink:ChemicalSubstance"],
+                    "categories": ["biolink:ChemicalEntity"],
                     "is_set": false
                 }
             },
@@ -34,11 +34,11 @@
                 },
                 "CHEBI:6801": {
                     "name": "metformin",
-                    "categories": ["biolink:ChemicalSubstance"]
+                    "categories": ["biolink:ChemicalEntity"]
                 },
                 "CHEBI:5441": {
                     "name": "glyburide",
-                    "categories": ["biolink:ChemicalSubstance"]
+                    "categories": ["biolink:ChemicalEntity"]
                 }
             },
             "edges": {
