@@ -42,13 +42,10 @@ async def _post_safely(
         service_name = url
     try:
         # use waitfor instead of httpx's timeout because: https://github.com/encode/httpx/issues/1451#issuecomment-907400740
-        response = await asyncio.wait_for(
-            client.post(
+        response = await client.post(
                 url,
                 json=payload,
-            ),
-            timeout=timeout,
-        )
+            )
         response.raise_for_status()
         response_json = response.json()
         Response(**response_json)  # validate against TRAPI
