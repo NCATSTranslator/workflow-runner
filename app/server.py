@@ -23,7 +23,7 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.4.0",
+    version="1.4.1",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
@@ -98,7 +98,7 @@ async def run_workflow(
     if "knowledge_graph" in message.keys():
         if "nodes" in message["knowledge_graph"].keys():
             kgraph = message["knowledge_graph"]
-            
+
     async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
         for operation in workflow:
             service_operation_responses = []
