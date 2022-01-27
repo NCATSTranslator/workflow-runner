@@ -1,15 +1,16 @@
-FROM python:3.9
+FROM renciorg/renci-python-image:v0.0.1
 
 WORKDIR /app
+
+# make sure all is writeable for the nru USER later on
+RUN chmod -R 777 .
 
 # set up requirements
 ADD requirements-lock.txt .
 RUN pip install -r requirements-lock.txt
 
-#create and run nonroot user
-RUN useradd -u 8877 nonroot
-RUN chown -R 8877 .
-USER nonroot
+# switch to the non-root user (nru). defined in the base image
+USER nru
 
 # set up source
 ADD . .
