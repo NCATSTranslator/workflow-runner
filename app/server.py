@@ -103,6 +103,21 @@ async def run_workflow(
 
     async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
         for operation in workflow:
+            operation_services = []
+            runner_parameters = operation.pop("runner_parameters", {})
+            if "allowlist" in runner_parameters.keys():
+                for service in SERVICES[operation["id"]]:
+                    if service["title"] in runner_parameters["allowlist"]:
+                        operation_services.append(service)
+            else:
+                for service in SERVICES[operation["id"]]:
+                    operation_services.append(service)
+                if "denylist" in runner_parameters.keys():
+                    for service in operation_services:
+                        if service["title"] in runner_parameters["denylist"]:
+                            operation_services.remove(service)
+            logger.debug(f"Service providers to query for operation '{operation}':'{operation_services}'")
+
             service_operation_responses = []
             for service in SERVICES[operation["id"]]:
                 url = service["url"]
@@ -162,6 +177,8 @@ async def run_workflow(
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
             message = m.dict()
+
+            operation["runner_parameters"] = runner_parameters
         
     return Response(
         message=message,
