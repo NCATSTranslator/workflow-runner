@@ -119,7 +119,7 @@ async def run_workflow(
             logger.debug(f"Service providers to query for operation '{operation}':'{operation_services}'")
 
             service_operation_responses = []
-            for service in SERVICES[operation["id"]]:
+            for service in operation_services:
                 url = service["url"]
                 service_name = service["title"]
                 logger.debug(f"Requesting operation '{operation}' from {service_name}...")
