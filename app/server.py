@@ -93,6 +93,8 @@ async def run_workflow(
     message = request_dict["message"]
     workflow = request_dict["workflow"]
     logger = gen_logger()
+    log_level = request_dict.get("log_level", "ERROR")
+    logger.setLevel(logging._nameToLevel[log_level])
     qgraph = message["query_graph"]
     kgraph = {"nodes": {}, "edges": {}}
     if "knowledge_graph" in message.keys():
