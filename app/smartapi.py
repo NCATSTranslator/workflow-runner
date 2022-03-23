@@ -73,13 +73,18 @@ class SmartAPI:
                 title = hit["info"]["title"]
             except KeyError:
                 title = None
+            try:
+                infores = hit["info"]["x-translator"]["infores"]
+            except KeyError:
+                infores = None
             endpoints.append({
+                "title": title,
                 "source_url": source_url,
                 "url": url,
                 "operations": operations,
                 "version": version,
-                "title": title,
-                "x-maturity": x_maturity
+                "x-maturity": x_maturity,
+                "infores": infores
             })
 
         return endpoints
