@@ -107,14 +107,14 @@ async def run_workflow(
             runner_parameters = operation.pop("runner_parameters", {})
             if "allowlist" in runner_parameters.keys():
                 for service in SERVICES[operation["id"]]:
-                    if service["title"] in runner_parameters["allowlist"]:
+                    if service["id"] in runner_parameters["allowlist"]:
                         operation_services.append(service)
             else:
                 for service in SERVICES[operation["id"]]:
                     operation_services.append(service)
                 if "denylist" in runner_parameters.keys():
                     for service in operation_services:
-                        if service["title"] in runner_parameters["denylist"]:
+                        if service["id"] in runner_parameters["denylist"]:
                             operation_services.remove(service)
             logger.debug(f"Service providers to query for operation '{operation}':'{operation_services}'")
 
