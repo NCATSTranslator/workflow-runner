@@ -8,7 +8,7 @@ class StandardOperations:
 
     def __init__(self):
         """Initialize."""
-        self.base_url = "https://standards.ncats.io/operation/1.3.1/schema"
+        self.base_url = "https://standards.ncats.io/operation/1.3.2/schema"
 
     @cache
     def get_operations(self):
