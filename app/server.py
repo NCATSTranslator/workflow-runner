@@ -1,4 +1,5 @@
 """Workflow runner."""
+from queue import Empty
 from re import M
 from app.models import Services, Operations
 from collections import defaultdict
@@ -106,19 +107,25 @@ async def run_workflow(
             operation_services = []
             runner_parameters = operation.pop("runner_parameters", {})
             if "allowlist" in runner_parameters.keys():
-                for service in SERVICES[operation["id"]]:
+                for service in SERVICES.get(operation["id"], []):
                     if service["id"] in runner_parameters["allowlist"]:
                         operation_services.append(service)
             else:
-                for service in SERVICES[operation["id"]]:
+                for service in SERVICES.get(operation["id"], []):
                     operation_services.append(service)
                 if "denylist" in runner_parameters.keys():
                     for service in operation_services:
                         if service["id"] in runner_parameters["denylist"]:
                             operation_services.remove(service)
-            logger.debug(f"Service providers to query for operation '{operation}':'{operation_services}'")
+
+            if operation_services:
+                logger.debug(f"Service providers to query for operation '{operation}':'{operation_services}'")
+            else:
+                logger.info(f"No service providers for operation '{operation}'")
+
 
             service_operation_responses = []
+
             for service in operation_services:
                 url = service["url"]
                 service_name = service["title"]
