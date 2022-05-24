@@ -101,6 +101,7 @@ async def run_workflow(
     if "knowledge_graph" in message.keys():
         if "nodes" in message["knowledge_graph"].keys():
             kgraph = message["knowledge_graph"]
+    completed_workflow = []
 
     async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
         for operation in workflow:
@@ -121,8 +122,12 @@ async def run_workflow(
             if operation_services:
                 logger.debug(f"Service providers to query for operation '{operation}':'{operation_services}'")
             else:
-                logger.info(f"No service providers for operation '{operation}'")
-
+                logger.error(f"Unable to complete workflow: No service providers for operation '{operation}'")
+                return Response(
+                    message=message,
+                    workflow=completed_workflow,
+                    logs=logger.handlers[0].store,
+                )
 
             service_operation_responses = []
 
@@ -186,6 +191,8 @@ async def run_workflow(
             message = m.dict()
 
             operation["runner_parameters"] = runner_parameters
+
+            completed_workflow.append(operation)
         
     return Response(
         message=message,
