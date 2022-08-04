@@ -251,8 +251,14 @@ async def refresh_services_and_operations():
             continue
         if response.status_code == 404:
             # Not a valid URL
-            LOGGER.warning("404 recieved for '%s'", base_url)
-            continue
+            try:
+                response = httpx.post(base_url + "/query")
+            except (httpx.ReadTimeout, httpx.ConnectError, httpx.ConnectTimeout):
+                LOGGER.warning("Discarding '%s due to timeout after 404.", base_url)
+                continue
+            if response.status_code == 404:
+                LOGGER.warning("404 recieved for '%s'", base_url)
+                continue
         # More than likely this is a 405 or some other error
         # Any response at this point is good
 
