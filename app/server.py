@@ -41,6 +41,7 @@ OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
 SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "production")
+TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.2.0")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
@@ -50,6 +51,8 @@ if OPENAPI_SERVER_URL:
             "x-location": OPENAPI_SERVER_LOCATION,
         },
     ]
+
+openapi_args["trapi"] = TRAPI_VERSION
 
 APP = TRAPI(**openapi_args)
 
@@ -224,7 +227,7 @@ async def refresh_services_and_operations():
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
-    endpoints = SmartAPI(SERVICES_MATURITY).get_operations_endpoints()
+    endpoints = SmartAPI(SERVICES_MATURITY, TRAPI_VERSION).get_operations_endpoints()
     for endpoint in endpoints:
         try:
             base_url = parse_obj_as(HttpUrl, endpoint["url"])
