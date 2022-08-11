@@ -2,6 +2,7 @@
 from functools import cache
 
 import os
+import re
 import httpx
 
 
@@ -64,8 +65,10 @@ class SmartAPI:
                 source_url = None
             try:
                 version = None
+                regex = re.compile("[0-9].[0-9].")
+                trapi_minor = regex.match(self.trapi).group()
                 # check the TRAPI version against workflow-runner TRAPI version
-                if hit["info"]["x-trapi"]["version"] == self.trapi:
+                if hit["info"]["x-trapi"]["version"].startswith(trapi_minor):
                     version = hit["info"]["x-trapi"]["version"]
                 else:
                     continue
