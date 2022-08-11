@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 
+from app.standard_operations import StandardOperations
+
 
 class TRAPI(FastAPI):
     """Translator Reasoner API - wrapper for FastAPI."""
@@ -59,12 +61,14 @@ class TRAPI(FastAPI):
             },
             "infores": self.infores,
         }
+        all_operations = StandardOperations().get_all_operations()
         openapi_schema["info"]["x-trapi"] = {
             "version": "1.2.0",
             "externalDocs": {
                 "description": "The values for version are restricted according to the regex in this external JSON schema. See schema and examples at url",
                 "url": "https://github.com/NCATSTranslator/translator_extensions/blob/production/x-trapi/",
             },
+            "operations": all_operations
         }
         openapi_schema["info"]["contact"] = self.contact
         openapi_schema["info"]["termsOfService"] = self.terms_of_service
