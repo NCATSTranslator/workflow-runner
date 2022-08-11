@@ -23,6 +23,7 @@ class TRAPI(FastAPI):
         translator_component: Optional[str] = None,
         translator_teams: Optional[List[str]] = None,
         infores: Optional[str] = None,
+        trapi: Optional[str] = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -31,6 +32,7 @@ class TRAPI(FastAPI):
         self.translator_component = translator_component
         self.translator_teams = translator_teams
         self.infores = infores
+        self.trapi = trapi
 
     def openapi(self) -> Dict[str, Any]:
         """Build custom OpenAPI schema."""
@@ -63,7 +65,7 @@ class TRAPI(FastAPI):
         }
         all_operations = StandardOperations().get_all_operations()
         openapi_schema["info"]["x-trapi"] = {
-            "version": "1.2.0",
+            "version": self.trapi,
             "externalDocs": {
                 "description": "The values for version are restricted according to the regex in this external JSON schema. See schema and examples at url",
                 "url": "https://github.com/NCATSTranslator/translator_extensions/blob/production/x-trapi/",
