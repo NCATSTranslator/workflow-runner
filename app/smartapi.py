@@ -8,11 +8,12 @@ import httpx
 class SmartAPI:
     """SmartAPI."""
 
-    def __init__(self, maturity):
+    def __init__(self, maturity, trapi):
         """Initialize."""
         self.base_url = "http://smart-api.info/api"
         # get workflow-runner maturity level
         self.maturity = maturity
+        self.trapi = trapi
 
     @cache
     def get_operations_endpoints(self):
@@ -62,9 +63,14 @@ class SmartAPI:
             except (KeyError, IndexError):
                 source_url = None
             try:
-                version = hit["info"]["x-trapi"]["version"]
-            except KeyError:
                 version = None
+                # check the TRAPI version against workflow-runner TRAPI version
+                if hit["info"]["x-trapi"]["version"] == self.trapi:
+                    version = hit["info"]["x-trapi"]["version"]
+                else:
+                    continue
+            except KeyError:
+                continue
             try:
                 operations = hit["info"]["x-trapi"]["operations"]
             except KeyError:
