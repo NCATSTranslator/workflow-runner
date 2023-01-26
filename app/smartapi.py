@@ -84,6 +84,8 @@ class SmartAPI:
                 title = None
             try:
                 infores = hit["info"]["x-translator"]["infores"]
+                if infores == "infores:workflow-runner":
+                    continue
             except KeyError:
                 infores = None
             endpoints.append({
