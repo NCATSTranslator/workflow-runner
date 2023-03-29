@@ -1,4 +1,6 @@
-fastapi==0.63.0
+fastapi==0.75.0
 httpx==0.18.1
 reasoner-pydantic==2.2.3
-uvicorn==0.13.3
+uvicorn==0.17.6
+pydantic~=1.9.1
+starlette~=0.17.1
