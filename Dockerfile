@@ -14,6 +14,7 @@ USER nru
 
 # set up source
 ADD . .
+COPY .env.sample .env
 
 # set up entrypoint
 ENTRYPOINT ["./main.sh"]

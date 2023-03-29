@@ -12,6 +12,7 @@ RUN pip install -r requirements-test-lock.txt
 
 # set up source
 ADD . .
+COPY .env.sample .env
 
 # set up entrypoint
 CMD pytest
