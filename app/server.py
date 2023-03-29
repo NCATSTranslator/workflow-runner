@@ -14,11 +14,11 @@ from reasoner_pydantic import Query as ReasonerQuery, Response
 from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph
 from starlette.middleware.cors import CORSMiddleware
 
-from .logging import gen_logger
-from .util import load_example, drop_nulls, post_safely
-from .trapi import TRAPI
-from .smartapi import SmartAPI
-from .standard_operations import StandardOperations
+from wr_logging import gen_logger
+from util import load_example, post_safely
+from trapi import TRAPI
+from smartapi import SmartAPI
+from standard_operations import StandardOperations
 
 LOGGER = logging.getLogger(__name__)
 
@@ -224,7 +224,15 @@ async def refresh_services_and_operations():
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
-    endpoints = SmartAPI(SERVICES_MATURITY).get_operations_endpoints()
+
+    def skip_arax_beta(server):
+        url = server.get("url", None)
+        if url is not None and url == "https://arax.ncats.io/beta/api/arax/v1.3":
+            return False
+        else:
+            return True
+
+    endpoints = SmartAPI(SERVICES_MATURITY).get_operations_endpoints(None, skip_arax_beta)
     for endpoint in endpoints:
         try:
             base_url = parse_obj_as(HttpUrl, endpoint["url"])
