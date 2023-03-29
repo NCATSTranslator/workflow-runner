@@ -20,5 +20,5 @@ case $key in
     ;;
 esac
 done
-
+export $(cat .env|grep -v '^#')
 uvicorn app.server:APP --host 0.0.0.0 --port $PORT
