@@ -20,7 +20,7 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.4.4",
+    version="1.4.7",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
@@ -37,6 +37,7 @@ OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
 SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "production")
+TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.2.0")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
@@ -46,6 +47,8 @@ if OPENAPI_SERVER_URL:
             "x-location": OPENAPI_SERVER_LOCATION,
         },
     ]
+
+openapi_args["trapi"] = TRAPI_VERSION
 
 APP = TRAPI(**openapi_args)
 
@@ -258,8 +261,14 @@ async def refresh_services_and_operations():
             continue
         if response.status_code == 404:
             # Not a valid URL
-            LOGGER.warning("404 recieved for '%s'", base_url)
-            continue
+            try:
+                response = httpx.post(base_url + "/query")
+            except (httpx.ReadTimeout, httpx.ConnectError, httpx.ConnectTimeout):
+                LOGGER.warning("Discarding '%s due to timeout after 404.", base_url)
+                continue
+            if response.status_code == 404:
+                LOGGER.warning("404 recieved for '%s'", base_url)
+                continue
         # More than likely this is a 405 or some other error
         # Any response at this point is good
 

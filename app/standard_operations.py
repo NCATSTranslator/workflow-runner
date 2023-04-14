@@ -42,3 +42,7 @@ class StandardOperations:
             }
 
         return operations
+
+    def get_all_operations(self):
+        operations = self.get_operations()
+        return list(operations.keys())
