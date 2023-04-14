@@ -130,9 +130,9 @@ def main():
         "-m",
         "--maturity",
         type=str,
-        choices=["development", "production", "ci", "test"],
+        choices=["development", "production", "staging", "testing"],
         nargs=1,
-        help="development, production, ci, test",
+        help="development, production, staging, testing",
     )
 
     args = argparser.parse_args()
@@ -165,9 +165,9 @@ def main():
                 return True
 
         endpoints = smartapi.get_trapi_endpoints(None, skip_arax_beta)
-        print(json.dumps(endpoints, sort_keys=True, indent=2))
+        # print(json.dumps(endpoints, sort_keys=True, indent=2))
         for endpoint in endpoints:
-            print(endpoint["title"])
+            print(endpoint["title"] + ": " + endpoint["url"])
 
     if args.get_operations_endpoints:
         endpoints = smartapi.get_operations_endpoints()
