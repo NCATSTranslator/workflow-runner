@@ -1,5 +1,5 @@
 fastapi==0.75.0
-httpx==0.18.1
+httpx==0.24.0
 reasoner-pydantic==2.2.3
 uvicorn==0.17.6
 pydantic~=1.9.1
