@@ -1,4 +1,5 @@
 """SmartAPI registry access utility."""
+import re
 from functools import cache
 from typing import Optional, Callable
 import httpx
@@ -54,7 +55,9 @@ class SmartAPI:
         endpoints = []
         for hit in hits:
             try:
-                if "/query" not in hit["paths"].keys():
+
+                hit["paths"]["path"]
+                if "/query" not in :
                     continue
             except KeyError:
                 continue
@@ -153,7 +156,7 @@ def main():
         argparser.print_help()
         return
 
-    smartapi = SmartAPI(maturity=args.maturity[0])
+    smartapi = SmartAPI(maturity=args.maturity[0], trapi="1.3.0")
 
     if args.get_trapi_endpoints:
 
