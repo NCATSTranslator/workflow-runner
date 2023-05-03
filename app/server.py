@@ -41,7 +41,7 @@ OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
 SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "production")
-TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.2.0")
+TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.3.0")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
@@ -112,14 +112,14 @@ async def run_workflow(
             runner_parameters = operation.pop("runner_parameters", {})
             if "allowlist" in runner_parameters.keys():
                 for service in SERVICES.get(operation["id"], []):
-                    if service["id"] in runner_parameters["allowlist"]:
+                    if service["infores"] in runner_parameters["allowlist"]:
                         operation_services.append(service)
             else:
                 for service in SERVICES.get(operation["id"], []):
                     operation_services.append(service)
                 if "denylist" in runner_parameters.keys():
                     for service in operation_services:
-                        if service["id"] in runner_parameters["denylist"]:
+                        if service["infores"] in runner_parameters["denylist"]:
                             operation_services.remove(service)
 
             if operation_services:
