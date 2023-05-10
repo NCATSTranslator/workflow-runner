@@ -11,7 +11,7 @@ import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
-from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph
+from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph, Results, AuxiliaryGraphs
 from starlette.middleware.cors import CORSMiddleware
 
 from .logging import gen_logger
@@ -101,6 +101,8 @@ async def run_workflow(
     logger.setLevel(logging._nameToLevel[log_level])
     qgraph = message["query_graph"]
     kgraph = {"nodes": {}, "edges": {}}
+    results = message.get("results", [])
+    aux_graphs = message.get("auxilary_graphs", {})
     if "knowledge_graph" in message.keys():
         if "nodes" in message["knowledge_graph"].keys():
             kgraph = message["knowledge_graph"]
@@ -185,8 +187,10 @@ async def run_workflow(
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
             m = Message(
-                query_graph=QueryGraph.parse_obj(qgraph), 
+                query_graph=QueryGraph.parse_obj(qgraph),
                 knowledge_graph=KnowledgeGraph.parse_obj(kgraph),
+                results=Results.parse_obj(results),
+                auxiliary_graphs=AuxiliaryGraphs.parse_obj(aux_graphs),
                 )
             for response in service_operation_responses:
                 response["message"]["query_graph"] = qgraph
