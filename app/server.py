@@ -40,8 +40,7 @@ NORMALIZER_URL = os.getenv("NORMALIZER_URL", "https://nodenormalization-sri.renc
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
-SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "development")
-TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.3.0")
+TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.4.0")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
