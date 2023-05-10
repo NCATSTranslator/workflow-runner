@@ -1,5 +1,10 @@
 FROM renciorg/renci-python-image:v0.0.1
 
+# Add image info
+LABEL org.opencontainers.image.source https://github.com/NCATSTranslator/workflow-runner
+
+ENV PYTHONHASHSEED=0
+
 WORKDIR /app
 
 # make sure all is writeable for the nru USER later on
