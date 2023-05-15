@@ -24,7 +24,7 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.6.0",
+    version="1.6.1",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
@@ -101,7 +101,7 @@ async def run_workflow(
     qgraph = message["query_graph"]
     kgraph = {"nodes": {}, "edges": {}}
     results = message.get("results", [])
-    aux_graphs = message.get("auxilary_graphs", {})
+    aux_graphs = message.get("auxiliary_graphs", {})
     if "knowledge_graph" in message.keys():
         if "nodes" in message["knowledge_graph"].keys():
             kgraph = message["knowledge_graph"]
