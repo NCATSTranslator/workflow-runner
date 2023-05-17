@@ -99,12 +99,6 @@ async def run_workflow(
     log_level = request_dict.get("log_level", "ERROR")
     logger.setLevel(logging._nameToLevel[log_level])
     qgraph = message["query_graph"]
-    kgraph = {"nodes": {}, "edges": {}}
-    results = message.get("results", [])
-    aux_graphs = message.get("auxiliary_graphs", {})
-    if "knowledge_graph" in message.keys():
-        if "nodes" in message["knowledge_graph"].keys():
-            kgraph = message["knowledge_graph"]
     completed_workflow = []
 
     async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
@@ -185,12 +179,7 @@ async def run_workflow(
                     break
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
-            m = Message(
-                query_graph=QueryGraph.parse_obj(qgraph),
-                knowledge_graph=KnowledgeGraph.parse_obj(kgraph),
-                results=Results.parse_obj(results),
-                auxiliary_graphs=AuxiliaryGraphs.parse_obj(aux_graphs),
-                )
+            m = Message(query_graph=QueryGraph.parse_obj(qgraph))
             for response in service_operation_responses:
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
