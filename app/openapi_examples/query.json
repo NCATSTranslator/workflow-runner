@@ -49,7 +49,7 @@
                     "sources": [
                         {
                             "resource_id": "infores:kp0",
-                            "resource_role": "biolink:primary_knowledge_source"
+                            "resource_role": "primary_knowledge_source"
                         }
                     ]
                 },
@@ -60,7 +60,7 @@
                     "sources": [
                         {
                             "resource_id": "infores:kp1",
-                            "resource_role": "biolink:primary_knowledge_source"
+                            "resource_role": "primary_knowledge_source"
                         }
                     ]
                 }
