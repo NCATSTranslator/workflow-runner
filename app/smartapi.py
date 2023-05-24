@@ -57,7 +57,7 @@ class SmartAPI:
                         break
                 if x_maturity is None:
                     continue
-            except (KeyError):
+            except KeyError:
                 continue
             try:
                 source_url = hit["_meta"]["url"]
@@ -119,20 +119,35 @@ def main():
         action="count",
         help="Get a list of TRAPI endpoints that support operations",
     )
+    argparser.add_argument(
+        "-m",
+        "--maturity",
+        type=str,
+        choices=["development", "production", "staging", "testing"],
+        nargs=1,
+        help="development, production, staging, testing",
+    )
+    argparser.add_argument(
+        "-t",
+        "--trapi_version",
+        type=str,
+        choices=["1.2.0", "1.3.0", "1.4.0"],
+        nargs=1,
+        help="1.2.0, 1.3.0, 1.4.0",
+    )
     args = argparser.parse_args()
 
-    if (
-        args.get_trapi_endpoints is None
-        and args.get_operations_endpoints is None
-    ):
+    if args.get_trapi_endpoints is None and args.get_operations_endpoints is None:
         argparser.print_help()
         return
 
-    smartapi = SmartAPI()
+    smartapi = SmartAPI(maturity=args.maturity[0], trapi=args.trapi_version[0])
 
     if args.get_trapi_endpoints:
         endpoints = smartapi.get_trapi_endpoints()
-        print(json.dumps(endpoints, sort_keys=True, indent=2))
+        for endpoint in endpoints:
+            print(f"{endpoint['infores']}: {endpoint['url']}")
+        # print(json.dumps(endpoints, sort_keys=True, indent=2))
 
     if args.get_operations_endpoints:
         endpoints = smartapi.get_operations_endpoints()
