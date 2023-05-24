@@ -1,6 +1,4 @@
 """Workflow runner."""
-from queue import Empty
-from re import M
 from app.models import Services, Operations
 from collections import defaultdict
 import logging
@@ -14,7 +12,7 @@ from reasoner_pydantic import Query as ReasonerQuery, Response
 from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph, Results, AuxiliaryGraphs
 from starlette.middleware.cors import CORSMiddleware
 
-from .logging import gen_logger
+from .wfr_logging import gen_logger
 from .util import load_example, drop_nulls, post_safely
 from .trapi import TRAPI
 from .smartapi import SmartAPI
@@ -240,7 +238,7 @@ async def refresh_services_and_operations():
                 continue
         # Now actualy check if we can contact the endpoint
         try:
-            response = httpx.get(base_url + "/query")
+            response = httpx.get(base_url + "/query", follow_redirects=True)
         except (httpx.ReadTimeout, httpx.ConnectError, httpx.ConnectTimeout):
             LOGGER.warning("Discarding '%s due to timeout.", base_url)
             continue
