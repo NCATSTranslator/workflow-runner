@@ -99,10 +99,11 @@ async def run_workflow(
     qgraph = message["query_graph"]
     completed_workflow = []
 
-    async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
-        for operation in workflow:
-            operation_services = []
-            runner_parameters = operation.pop("runner_parameters", {})
+    for operation in workflow:
+        operation_services = []
+        runner_parameters = operation.pop("runner_parameters", {})
+        operation_timeout = runner_parameters.get("timeout", 60.0)
+        async with httpx.AsyncClient(verify=False, timeout=operation_timeout) as client:
             if "allowlist" in runner_parameters.keys():
                 for service in SERVICES.get(operation["id"], []):
                     if service["infores"] in runner_parameters["allowlist"]:
@@ -142,7 +143,7 @@ async def run_workflow(
                             "submitter": "Workflow Runner",
                         },
                         client=client,
-                        timeout=60.0,
+                        timeout=operation_timeout,
                         logger=logger,
                         service_name=service_name,
                     )
