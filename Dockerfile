@@ -1,4 +1,4 @@
-FROM renciorg/renci-python-image:v0.0.1
+FROM ghcr.io/translatorsri/renci-python-image:0.2.0
 
 # Add image info
 LABEL org.opencontainers.image.source https://github.com/NCATSTranslator/workflow-runner
