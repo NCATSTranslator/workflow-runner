@@ -21,4 +21,4 @@ case $key in
 esac
 done
 
-uvicorn app.server:APP --host 0.0.0.0 --port $PORT
+uvicorn app.server:APP --host 0.0.0.0 --port $PORT --workers 4
