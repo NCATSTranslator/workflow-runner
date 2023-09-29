@@ -92,11 +92,12 @@ async def run_workflow(
     )
     
     message = request_dict["message"]
+    qgraph = message["query_graph"]
+    message["auxiliary_graphs"] = message.get("auxiliary_graphs") or {}
     workflow = request_dict["workflow"]
     logger = gen_logger()
     log_level = request_dict.get("log_level", "ERROR")
     logger.setLevel(logging._nameToLevel[log_level])
-    qgraph = message["query_graph"]
     completed_workflow = []
 
     for operation in workflow:
