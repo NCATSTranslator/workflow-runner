@@ -151,7 +151,7 @@ async def run_workflow(
 
                     try:
                         response = await post_safely(
-                            NORMALIZER_URL + "/response",
+                            NORMALIZER_URL + "/query",
                             {
                                 "message": response["message"],
                                 "submitter": "Workflow Runner"
