@@ -218,7 +218,7 @@ async def refresh_services_and_operations():
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
-    endpoints = SmartAPI(OPENAPI_SERVER_MATURITY, TRAPI_VERSION).get_operations_endpoints()
+    endpoints = SmartAPI(OPENAPI_SERVER_MATURITY, TRAPI_VERSION, LOGGER).get_operations_endpoints()
     for endpoint in endpoints:
         try:
             base_url = parse_obj_as(HttpUrl, endpoint["url"])
