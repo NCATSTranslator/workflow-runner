@@ -9,12 +9,13 @@ import httpx
 class SmartAPI:
     """SmartAPI."""
 
-    def __init__(self, maturity, trapi):
+    def __init__(self, maturity, trapi, logger):
         """Initialize."""
         self.base_url = "http://smart-api.info/api"
         # get workflow-runner maturity level
         self.maturity = maturity
         self.trapi = trapi
+        self.logger = logger
 
     @cache
     def get_operations_endpoints(self):
@@ -42,9 +43,14 @@ class SmartAPI:
         endpoints = []
         for hit in response_dict["hits"]:
             try:
+                title = hit["info"]["title"]
+            except KeyError:
+                title = None
+            try:
                 if "/query" not in hit["paths"].keys():
                     continue
             except KeyError:
+                self.logger.warning(f"{title} doesn't have paths")
                 continue
             try:
                 url = None
@@ -56,8 +62,10 @@ class SmartAPI:
                         url = server.get("url", None)
                         break
                 if x_maturity is None:
+                    self.logger.warning(f"{title} doesn't have a matching maturity")
                     continue
             except KeyError:
+                self.logger.warning(f"{title} failed to get maturity")
                 continue
             try:
                 source_url = hit["_meta"]["url"]
@@ -71,17 +79,15 @@ class SmartAPI:
                 if hit["info"]["x-trapi"]["version"].startswith(trapi_minor):
                     version = hit["info"]["x-trapi"]["version"]
                 else:
+                    self.logger.warning(f"{title} doesn't have the correct TRAPI version")
                     continue
             except KeyError:
+                self.logger.warning(f"{title} failed to get TRAPI version")
                 continue
             try:
                 operations = hit["info"]["x-trapi"]["operations"]
             except KeyError:
                 operations = None
-            try:
-                title = hit["info"]["title"]
-            except KeyError:
-                title = None
             try:
                 infores = hit["info"]["x-translator"]["infores"]
                 if infores == "infores:workflow-runner":
