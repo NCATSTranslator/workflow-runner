@@ -1,6 +1,4 @@
 """Workflow runner."""
-from queue import Empty
-from re import M
 from app.models import Services, Operations
 from collections import defaultdict
 import logging
@@ -11,10 +9,10 @@ import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
 from reasoner_pydantic import Query as ReasonerQuery, Response
-from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph
+from reasoner_pydantic import Message, QueryGraph, KnowledgeGraph, Results, AuxiliaryGraphs
 from starlette.middleware.cors import CORSMiddleware
 
-from .logging import gen_logger
+from .wfr_logging import gen_logger
 from .util import load_example, drop_nulls, post_safely
 from .trapi import TRAPI
 from .smartapi import SmartAPI
@@ -24,15 +22,15 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.4.7",
+    version="1.6.6",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
     infores="infores:workflow-runner",
     contact={
-        "name": "Kenny Morton",
-        "email": "kenny@covar.com",
-        "x-id": "kennethmorton",
+        "name": "Abrar Mesbah",
+        "email": "amesbah@covar.com",
+        "x-id": "uhbrar",
         "x-role": "responsible developer",
     },
 )
@@ -40,7 +38,7 @@ NORMALIZER_URL = os.getenv("NORMALIZER_URL", "https://nodenormalization-sri.renc
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
-SERVICES_MATURITY = os.getenv("SERVICES_MATURITY", "production")
+TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.4.0")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
@@ -50,6 +48,8 @@ if OPENAPI_SERVER_URL:
             "x-location": OPENAPI_SERVER_LOCATION,
         },
     ]
+
+openapi_args["trapi"] = TRAPI_VERSION
 
 APP = TRAPI(**openapi_args)
 
@@ -92,31 +92,29 @@ async def run_workflow(
     )
     
     message = request_dict["message"]
+    qgraph = message["query_graph"]
+    message["auxiliary_graphs"] = message.get("auxiliary_graphs") or {}
     workflow = request_dict["workflow"]
     logger = gen_logger()
     log_level = request_dict.get("log_level", "ERROR")
     logger.setLevel(logging._nameToLevel[log_level])
-    qgraph = message["query_graph"]
-    kgraph = {"nodes": {}, "edges": {}}
-    if "knowledge_graph" in message.keys():
-        if "nodes" in message["knowledge_graph"].keys():
-            kgraph = message["knowledge_graph"]
     completed_workflow = []
 
-    async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
-        for operation in workflow:
-            operation_services = []
-            runner_parameters = operation.pop("runner_parameters", {})
+    for operation in workflow:
+        operation_services = []
+        runner_parameters = operation.pop("runner_parameters", {})
+        operation_timeout = runner_parameters.get("timeout", 60.0)
+        async with httpx.AsyncClient(verify=False, timeout=operation_timeout) as client:
             if "allowlist" in runner_parameters.keys():
                 for service in SERVICES.get(operation["id"], []):
-                    if service["id"] in runner_parameters["allowlist"]:
+                    if service["infores"] in runner_parameters["allowlist"]:
                         operation_services.append(service)
             else:
                 for service in SERVICES.get(operation["id"], []):
                     operation_services.append(service)
                 if "denylist" in runner_parameters.keys():
                     for service in operation_services:
-                        if service["id"] in runner_parameters["denylist"]:
+                        if service["infores"] in runner_parameters["denylist"]:
                             operation_services.remove(service)
 
             if operation_services:
@@ -146,7 +144,7 @@ async def run_workflow(
                             "submitter": "Workflow Runner",
                         },
                         client=client,
-                        timeout=60.0,
+                        timeout=operation_timeout,
                         logger=logger,
                         service_name=service_name,
                     )
@@ -154,7 +152,7 @@ async def run_workflow(
 
                     try:
                         response = await post_safely(
-                            NORMALIZER_URL + "/response",
+                            NORMALIZER_URL + "/query",
                             {
                                 "message": response["message"],
                                 "submitter": "Workflow Runner"
@@ -181,10 +179,7 @@ async def run_workflow(
                     break
             
             logger.debug(f"Merging {len(service_operation_responses)} responses for '{operation}'...")
-            m = Message(
-                query_graph=QueryGraph.parse_obj(qgraph), 
-                knowledge_graph=KnowledgeGraph.parse_obj(kgraph),
-                )
+            m = Message(query_graph=QueryGraph.parse_obj(qgraph))
             for response in service_operation_responses:
                 response["message"]["query_graph"] = qgraph
                 m.update(Message.parse_obj(response["message"]))
@@ -224,7 +219,7 @@ async def refresh_services_and_operations():
     global SERVICES
     # Start with empty SERVICES dict.
     SERVICES = defaultdict(list)
-    endpoints = SmartAPI(SERVICES_MATURITY).get_operations_endpoints()
+    endpoints = SmartAPI(OPENAPI_SERVER_MATURITY, TRAPI_VERSION, LOGGER).get_operations_endpoints()
     for endpoint in endpoints:
         try:
             base_url = parse_obj_as(HttpUrl, endpoint["url"])
@@ -245,7 +240,7 @@ async def refresh_services_and_operations():
                 continue
         # Now actualy check if we can contact the endpoint
         try:
-            response = httpx.get(base_url + "/query")
+            response = httpx.get(base_url + "/query", follow_redirects=True)
         except (httpx.ReadTimeout, httpx.ConnectError, httpx.ConnectTimeout):
             LOGGER.warning("Discarding '%s due to timeout.", base_url)
             continue

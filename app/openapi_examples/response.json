@@ -41,7 +41,13 @@
                 "df87ff82": {
                     "subject": "CHEBI:6801",
                     "predicate": "biolink:treats",
-                    "object": "MONDO:0005148"
+                    "object": "MONDO:0005148",
+                    "sources": [
+                        {
+                            "resource_id": "infores:kp0",
+                            "resource_role": "primary_knowledge_source"
+                        }
+                    ]
                 }
             }
         },
@@ -59,13 +65,18 @@
                         }
                     ]
                 },
-                "edge_bindings": {
-                    "treats": [
-                        {
-                            "id": "df87ff82"
+                "analyses": [
+                    {
+                        "resource_id": "infores:kp0",
+                        "edge_bindings": {
+                            "treats": [
+                                {
+                                    "id": "df87ff82"
+                                }
+                            ]
                         }
-                    ]
-                }
+                    }
+                ]
             }
         ]
     }

@@ -2,17 +2,20 @@
 from functools import cache
 
 import os
+import re
 import httpx
 
 
 class SmartAPI:
     """SmartAPI."""
 
-    def __init__(self, maturity):
+    def __init__(self, maturity, trapi, logger):
         """Initialize."""
         self.base_url = "http://smart-api.info/api"
         # get workflow-runner maturity level
         self.maturity = maturity
+        self.trapi = trapi
+        self.logger = logger
 
     @cache
     def get_operations_endpoints(self):
@@ -40,9 +43,14 @@ class SmartAPI:
         endpoints = []
         for hit in response_dict["hits"]:
             try:
+                title = hit["info"]["title"]
+            except KeyError:
+                title = None
+            try:
                 if "/query" not in hit["paths"].keys():
                     continue
             except KeyError:
+                self.logger.warning(f"{title} doesn't have paths")
                 continue
             try:
                 url = None
@@ -54,27 +62,36 @@ class SmartAPI:
                         url = server.get("url", None)
                         break
                 if x_maturity is None:
+                    self.logger.warning(f"{title} doesn't have a matching maturity")
                     continue
-            except (KeyError):
+            except KeyError:
+                self.logger.warning(f"{title} failed to get maturity")
                 continue
             try:
                 source_url = hit["_meta"]["url"]
             except (KeyError, IndexError):
                 source_url = None
             try:
-                version = hit["info"]["x-trapi"]["version"]
-            except KeyError:
                 version = None
+                regex = re.compile("[0-9].[0-9].")
+                trapi_minor = regex.match(self.trapi).group()
+                # check the TRAPI version against workflow-runner TRAPI version
+                if hit["info"]["x-trapi"]["version"].startswith(trapi_minor):
+                    version = hit["info"]["x-trapi"]["version"]
+                else:
+                    self.logger.warning(f"{title} doesn't have the correct TRAPI version")
+                    continue
+            except KeyError:
+                self.logger.warning(f"{title} failed to get TRAPI version")
+                continue
             try:
                 operations = hit["info"]["x-trapi"]["operations"]
             except KeyError:
                 operations = None
             try:
-                title = hit["info"]["title"]
-            except KeyError:
-                title = None
-            try:
                 infores = hit["info"]["x-translator"]["infores"]
+                if infores == "infores:workflow-runner":
+                    continue
             except KeyError:
                 infores = None
             endpoints.append({
@@ -108,20 +125,35 @@ def main():
         action="count",
         help="Get a list of TRAPI endpoints that support operations",
     )
+    argparser.add_argument(
+        "-m",
+        "--maturity",
+        type=str,
+        choices=["development", "production", "staging", "testing"],
+        nargs=1,
+        help="development, production, staging, testing",
+    )
+    argparser.add_argument(
+        "-t",
+        "--trapi_version",
+        type=str,
+        choices=["1.2.0", "1.3.0", "1.4.0"],
+        nargs=1,
+        help="1.2.0, 1.3.0, 1.4.0",
+    )
     args = argparser.parse_args()
 
-    if (
-        args.get_trapi_endpoints is None
-        and args.get_operations_endpoints is None
-    ):
+    if args.get_trapi_endpoints is None and args.get_operations_endpoints is None:
         argparser.print_help()
         return
 
-    smartapi = SmartAPI()
+    smartapi = SmartAPI(maturity=args.maturity[0], trapi=args.trapi_version[0])
 
     if args.get_trapi_endpoints:
         endpoints = smartapi.get_trapi_endpoints()
-        print(json.dumps(endpoints, sort_keys=True, indent=2))
+        for endpoint in endpoints:
+            print(f"{endpoint['infores']}: {endpoint['url']}")
+        # print(json.dumps(endpoints, sort_keys=True, indent=2))
 
     if args.get_operations_endpoints:
         endpoints = smartapi.get_operations_endpoints()
