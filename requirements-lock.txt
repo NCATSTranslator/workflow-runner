@@ -9,7 +9,7 @@ httpx==0.24.1
 idna==3.3
 packaging==23.2
 pydantic==1.9.0
-reasoner-pydantic==4.1.4
+reasoner-pydantic==4.1.5
 rfc3986==1.5.0
 sniffio==1.2.0
 starlette==0.17.1
