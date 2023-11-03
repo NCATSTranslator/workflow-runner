@@ -4,7 +4,7 @@ from collections import defaultdict
 import logging
 import os
 
-from fastapi import Body
+from fastapi import Body, HTTPException
 import httpx
 from pydantic import HttpUrl, ValidationError
 from pydantic.tools import parse_obj_as
@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.6.7",
+    version="1.6.8",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
@@ -94,7 +94,9 @@ async def run_workflow(
     message = request_dict["message"]
     qgraph = message["query_graph"]
     message["auxiliary_graphs"] = message.get("auxiliary_graphs") or {}
-    workflow = request_dict["workflow"]
+    workflow = request_dict.get("workflow", [])
+    if not workflow:
+        raise HTTPException(400, "Request must include a workflow.")
     logger = gen_logger()
     log_level = request_dict.get("log_level", "ERROR")
     logger.setLevel(logging._nameToLevel[log_level])
