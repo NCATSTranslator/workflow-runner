@@ -137,9 +137,9 @@ def main():
         "-t",
         "--trapi_version",
         type=str,
-        choices=["1.2.0", "1.3.0", "1.4.0"],
+        choices=["1.2.0", "1.3.0", "1.4.0", "1.5.0"],
         nargs=1,
-        help="1.2.0, 1.3.0, 1.4.0",
+        help="1.2.0, 1.3.0, 1.4.0, 1.5.0",
     )
     args = argparser.parse_args()
 

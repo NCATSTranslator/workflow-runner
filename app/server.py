@@ -22,7 +22,7 @@ LOGGER = logging.getLogger(__name__)
 
 openapi_args = dict(
     title="Workflow runner",
-    version="1.6.8",
+    version="1.7.0",
     terms_of_service="",
     translator_component="ARA",
     translator_teams=["Standards Reference Implementation Team"],
@@ -38,7 +38,7 @@ NORMALIZER_URL = os.getenv("NORMALIZER_URL", "https://nodenormalization-sri.renc
 OPENAPI_SERVER_URL = os.getenv("OPENAPI_SERVER_URL")
 OPENAPI_SERVER_MATURITY = os.getenv("OPENAPI_SERVER_MATURITY", "development")
 OPENAPI_SERVER_LOCATION = os.getenv("OPENAPI_SERVER_LOCATION", "RENCI")
-TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.4.0")
+TRAPI_VERSION = os.getenv("TRAPI_VERSION", "1.5.0")
 
 if OPENAPI_SERVER_URL:
     openapi_args["servers"] = [
