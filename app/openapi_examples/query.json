@@ -31,6 +31,7 @@
             "nodes": {
                 "MONDO:0005148": {
                     "name": "type-2 diabetes",
+                    "categories": ["biolink:Disease"],
                     "attributes": []
                 },
                 "CHEBI:6801": {
