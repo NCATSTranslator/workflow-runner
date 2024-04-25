@@ -30,15 +30,18 @@
         "knowledge_graph": {
             "nodes": {
                 "MONDO:0005148": {
-                    "name": "type-2 diabetes"
+                    "name": "type-2 diabetes",
+                    "attributes": []
                 },
                 "CHEBI:6801": {
                     "name": "metformin",
-                    "categories": ["biolink:ChemicalEntity"]
+                    "categories": ["biolink:ChemicalEntity"],
+                    "attributes": []
                 },
                 "CHEBI:5441": {
                     "name": "glyburide",
-                    "categories": ["biolink:ChemicalEntity"]
+                    "categories": ["biolink:ChemicalEntity"],
+                    "attributes": []
                 }
             },
             "edges": {
@@ -51,7 +54,8 @@
                             "resource_id": "infores:kp0",
                             "resource_role": "primary_knowledge_source"
                         }
-                    ]
+                    ],
+                    "attributes": []
                 },
                 "5133c100": {
                     "subject": "CHEBI:5441",
@@ -62,7 +66,8 @@
                             "resource_id": "infores:kp1",
                             "resource_role": "primary_knowledge_source"
                         }
-                    ]
+                    ],
+                    "attributes": []
                 }
             }
         },
@@ -71,12 +76,14 @@
                 "node_bindings": {
                     "type-2 diabetes": [
                         {
-                            "id": "MONDO:0005148"
+                            "id": "MONDO:0005148",
+                            "attributes": []
                         }
                     ],
                     "drug": [
                         {
-                            "id": "CHEBI:6801"
+                            "id": "CHEBI:6801",
+                            "attributes": []
                         }
                     ]
                 },
@@ -86,7 +93,8 @@
                         "edge_bindings": {
                             "treats": [
                                 {
-                                    "id": "df87ff82"
+                                    "id": "df87ff82",
+                                    "attributes": []
                                 }
                             ]
                         }
@@ -97,12 +105,14 @@
                 "node_bindings": {
                     "type-2 diabetes": [
                         {
-                            "id": "MONDO:0005148"
+                            "id": "MONDO:0005148",
+                            "attributes": []
                         }
                     ],
                     "drug": [
                         {
-                            "id": "CHEBI:5441"
+                            "id": "CHEBI:5441",
+                            "attributes": []
                         }
                     ]
                 },
@@ -112,7 +122,8 @@
                         "edge_bindings": {
                             "treats": [
                                 {
-                                    "id": "5133c100"
+                                    "id": "5133c100",
+                                    "attributes": []
                                 }
                             ]
                         }
