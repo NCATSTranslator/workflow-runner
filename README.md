@@ -1,5 +1,11 @@
 # Workflow runner
 
+Workflow Runner is a tool that utlizes the Operations and Workflows language to perform queries. A request can be sent to the service containing a TRAPI message and workflow. Workflow Runner will then perform all of the operations included in the workflow on the message. Workflows are defined sequentially, so each operation is performed on the result message of the operation directly preceeding it.
+
+Workflow Runner is dependent on operation providers, which are the services that are able to perform each operation. These operation providers are discoverd through SmartAPI registry, and require services to self report which operations they support. The list of operation providers can be found through the /services endpoint.
+
+A complete list of operations can be found here: https://github.com/NCATSTranslator/OperationsAndWorkflows?tab=readme-ov-file
+
 ## deployment
 
 ### Live service

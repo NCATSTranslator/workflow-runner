@@ -102,11 +102,13 @@ async def run_workflow(
     logger.setLevel(logging._nameToLevel[log_level])
     completed_workflow = []
 
+    # Run operations in workflow sequentially, using output from one operation as input for next
     for operation in workflow:
         operation_services = []
         runner_parameters = operation.pop("runner_parameters", {})
         operation_timeout = runner_parameters.get("timeout", 60.0)
         async with httpx.AsyncClient(verify=False, timeout=operation_timeout) as client:
+            # If allowlist included, only use those services
             if "allowlist" in runner_parameters.keys():
                 for service in SERVICES.get(operation["id"], []):
                     if service["infores"] in runner_parameters["allowlist"]:
@@ -114,6 +116,7 @@ async def run_workflow(
             else:
                 for service in SERVICES.get(operation["id"], []):
                     operation_services.append(service)
+                # Don't use anything in the denylist
                 if "denylist" in runner_parameters.keys():
                     for service in operation_services:
                         if service["infores"] in runner_parameters["denylist"]:
@@ -131,6 +134,7 @@ async def run_workflow(
 
             service_operation_responses = []
 
+            # Run operation on each operation provider
             for service in operation_services:
                 url = service["url"]
                 service_name = service["title"]
@@ -152,6 +156,7 @@ async def run_workflow(
                     )
                     logger.debug(f"Received operation '{operation}' from {service_name}...")
 
+                    # Normalize responses so we can merge
                     try:
                         response = await post_safely(
                             NORMALIZER_URL + "/query",
